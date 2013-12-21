@@ -4,3 +4,5 @@ vlt:
 icarus:
 	orpsoc sim --force --sim icarus or1200-generic --vcd --or1k-elf-load /home/jts/sandbox/bld-orpsoc/sw/hello
 
+openocd:
+	openocd -f tcl/interface/jtag_vpi.cfg -f tcl/board/or1200_generic.cfg 
