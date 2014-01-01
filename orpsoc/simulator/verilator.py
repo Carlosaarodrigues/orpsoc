@@ -69,10 +69,12 @@ class Verilator(Simulator):
         f = open(os.path.join(self.sim_root,self.verilator_file),'w')
 
         for include_dir in self.verilog.include_dirs:
-            f.write("+incdir+" + os.path.abspath(include_dir) + '\n')
+            if include_dir.find('jtag_vpi') == -1:
+                f.write("+incdir+" + os.path.abspath(include_dir) + '\n')
 
         for src_file in self.verilog.src_files:
-            f.write(os.path.abspath(src_file) + '\n')
+            if src_file.find('jtag_vpi') == -1:
+                f.write(os.path.abspath(src_file) + '\n')
 	f.close()
 	#converted verilog for C of define file
 	if self.define_file:
