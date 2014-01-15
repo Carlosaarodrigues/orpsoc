@@ -1,7 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env @PYTHON@
 import argparse
 import os
 import sys
+import signal
 
 #Check if this is run from a local installation
 orpsocdir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
@@ -12,7 +13,7 @@ else:
 
 from orpsoc.build import BackendFactory
 from orpsoc.config import Config
-from orpsoc.coremanager import CoreManager
+from orpsoc.coremanager import CoreManager, DependencyError
 from orpsoc.simulator import SimulatorFactory
 from orpsoc.system import System
 from orpsoc.core import Core
@@ -21,28 +22,61 @@ import logging
 logging.basicConfig(filename='orpsoc.log', filemode='w', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+def abort_handler(signal, frame):
+        print('\033[91m\n')
+        print('****************************')
+        print('****   ORPSoC aborted   ****')
+        print('****************************')
+        print('\033[0m\n')
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, abort_handler)
+
 def build(known, remaining):
     logger.debug('build() *Entered*')
     if known.system in CoreManager().get_systems():
         core = CoreManager().get_core(known.system)
-
-    backend = BackendFactory(core.system)
-    backend.configure()
-    backend.build()
-    logging.debug('build() -Done-')
+        backend = BackendFactory(core.system)
+        backend.configure()
+        backend.build()
+        logging.debug('build() -Done-')
+    else:
+        print("Error: Can't find system " + known.system)
 
 def pgm(known, remaining):
     logger.debug('pgm() *Entered*')
     if known.system in CoreManager().get_systems():
         core = CoreManager().get_core(known.system)
+        backend = BackendFactory(core.system)
+        backend.pgm(remaining)
+        logging.debug('pgm() -Done-')
+    else:
+        print("Error: Can't find system " + known.system)
 
-    backend = BackendFactory(core.system)
-    backend.pgm(remaining)
-    logging.debug('pgm() -Done-')
+def fetch(known, remaining):
+    logger.debug('fetch() *Entered*')
+    core = CoreManager().get_core(known.core)
+    if core:
+        cores = CoreManager().get_depends(core.name)
+        core.setup()
+        for name in cores:
+             print("Fetching " + name)
+             core = CoreManager().get_core(name)
+             core.setup()
+        logging.debug('fetch() -Done-')
+    else:
+        print("Error: Can't find core " + known.core)
 
 def list_cores(known, remaining):
     cores = CoreManager().get_cores()
     print("Available cores:")
+    if not cores:
+        cores_root = CoreManager().get_cores_root()
+        if cores_root:
+            print("Error: No cores found in "+':'.join(cores_root))
+        else:
+            print("Error: cores_root is not defined")
+        exit(1)
     maxlen = max(map(len,cores.keys()))
     print('Core'.ljust(maxlen) + '   Cache status')
     print("="*80)
@@ -87,7 +121,11 @@ def sim(known, remaining):
         print("No simulator was found in "+ known.system + " core description")
         logger.error("No simulator was found in "+ known.system + " core description")
         exit(1)
-    sim = SimulatorFactory(sim_name, core)
+    try:
+        sim = SimulatorFactory(sim_name, core)
+    except DependencyError as e:
+        print("Error: '" + known.system + "' or any of its dependencies requires '" + e.value + "', but this core was not found")
+        exit(1)
     if known.force or not os.path.exists(sim.sim_root):
         sim.configure()
         sim.build()
@@ -118,6 +156,10 @@ if __name__ == "__main__":
     parser_pgm = subparsers.add_parser('pgm', help='Program a FPGA with a system configuration')
     parser_pgm.add_argument('system')
     parser_pgm.set_defaults(func=pgm)
+
+    parser_fetch = subparsers.add_parser('fetch', help='Fetch a remote core and its dependencies to local cache')
+    parser_fetch.add_argument('core')
+    parser_fetch.set_defaults(func=fetch)
 
     parser_list_systems = subparsers.add_parser('list-systems', help='List available systems')
     parser_list_systems.set_defaults(func=list_systems)

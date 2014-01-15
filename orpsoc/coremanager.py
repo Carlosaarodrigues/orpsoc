@@ -1,3 +1,4 @@
+import collections
 import logging
 import os
 
@@ -31,8 +32,10 @@ class CoreManager(object):
             try:
                 self._cores[name] = Core(file)
                 logger.debug("Adding core " + file)
-            except SyntaxError:
-                logger.debug("Failed to parse " + file)
+            except SyntaxError as e:
+                w = "Warning: Failed to parse " + file + ": " + e.msg
+                print(w)
+                logger.warning(w)
         
     def load_cores(self, path):
         if path:
@@ -55,6 +58,9 @@ class CoreManager(object):
             if not abspath in self._cores_root:
                 self._cores_root += [abspath]
                 self.load_cores(path)
+
+    def get_cores_root(self):
+        return self._cores_root
 
     def get_depends(self, core):
         if self._cores[core].depend:
@@ -81,6 +87,19 @@ class CoreManager(object):
             return self._cores[name]
         else:
             return None
+
+    def get_property(self, core, attr, recursive=True):
+        retval = collections.OrderedDict()
+
+        if recursive:
+            for c in self._cores[core].depend:
+                if not c in retval:
+                    retval.update(self.get_property(c, attr))
+        try:
+            retval[core] = getattr(self._cores[core], attr)
+        except AttributeError:
+            pass
+        return retval
 
     def get_systems(self):
         systems = {}

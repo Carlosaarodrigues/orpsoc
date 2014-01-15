@@ -14,8 +14,8 @@ class Verilator(Simulator):
         self.include_files = []
         self.include_dirs = []
         self.tb_toplevel = ""
-	self.src_type = 'C'
-	self.define_file = []
+        self.src_type = 'C'
+        self.define_file = []
 
         if system.verilator is not None:
             self._load_dict(system.verilator)
@@ -36,10 +36,10 @@ class Verilator(Simulator):
                 self.include_dirs  = list(set(map(os.path.dirname, self.include_files)))              
             elif item == 'tb_toplevel':
                 self.tb_toplevel = items.get(item)
-	    elif item == 'source_type':
-		self.src_type = items.get(item)
-	    elif item == 'define_file':
-		self.define_file = items.get(item)
+            elif item == 'source_type':
+                self.src_type = items.get(item)
+            elif item == 'define_file':
+                self.define_file = items.get(item)
             else:
                 print("Warning: Unknown item '" + item +"' in verilator section")
 
@@ -75,32 +75,32 @@ class Verilator(Simulator):
         for src_file in self.verilog.src_files:
             if src_file.find('jtag_vpi') == -1:
                 f.write(os.path.abspath(src_file) + '\n')
-	f.close()
-	#converted verilog for C of define file
-	if self.define_file:
-	    fV = open (os.path.join(self.sim_root,"../src",self.define_file),'r')
-	    fC = open (os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h'),'w')
-	    fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
-	    fC.write("//source file --> " + os.path.join(self.sim_root,"../src",self.define_file)+"\n")
-	    for line in fV:
-		Sline=line.split('`',1)
-		if len(Sline) == 1:
-		   fC.write(Sline[0])
-		else:
-		   fC.write(Sline[0]+"#"+Sline[1])
-	    fC.close
-	    fV.close
+        f.close()
+        #convert verilog defines into C file
+        if self.define_file:
+            fV = open (os.path.join(self.sim_root,"../src",self.define_file),'r')
+            fC = open (os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h'),'w')
+            fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
+            fC.write("//source file --> " + os.path.join(self.sim_root,"../src",self.define_file)+"\n")
+            for line in fV:
+                Sline=line.split('`',1)
+                if len(Sline) == 1:
+                    fC.write(Sline[0])
+                else:
+                    fC.write(Sline[0]+"#"+Sline[1])
+            fC.close
+            fV.close
 
         
-    def build(self): #choose build for source type
+    def build(self):
         super(Verilator, self).build()
-	if self.src_type == 'C':
-	    self.build_C()
-	elif self.src_type == 'systemC':
-	    self.build_SysC()
-	else:
-	    print("Source type not available. 'C' or 'systemC'")
-	    exit(1)
+        if self.src_type == 'C':
+            self.build_C()
+        elif self.src_type == 'systemC':
+            self.build_SysC()
+        else:
+            print("Source type not available. 'C' or 'systemC'")
+            exit(1)
 
     def build_C(self):
         args = ['-c']
@@ -138,7 +138,7 @@ class Verilator(Simulator):
 
 	object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
 
-	#verilogue
+	#verilog
 	try:
 	    cmd = os.path.join(self.verilator_root,'bin','verilator') 
 	    subprocess.check_call(['bash',cmd,'--sc','--top-module', 'orpsoc_top','-f',self.verilator_file,'--exe']+
@@ -182,7 +182,6 @@ class Verilator(Simulator):
         
     def run(self, args):
         #TODO: Handle arguments parsing
-	print ("./Vorpsoc_top")
         utils.launch('./Vorpsoc_top',
                      args,
                      cwd=os.path.join(self.sim_root, 'obj_dir'))
