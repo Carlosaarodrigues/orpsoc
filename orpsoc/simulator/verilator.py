@@ -24,6 +24,8 @@ class Verilator(Simulator):
             print("Environment variable VERILATOR_ROOT was not found. It should be set to the verilator install path")
             exit(1)
         self.sim_root = os.path.join(self.build_root, 'sim-verilator')
+	self.src_root = os.path.join(self.build_root, 'src')
+
 
     def _load_dict(self, items):
         for item in items:
@@ -78,7 +80,7 @@ class Verilator(Simulator):
         f.close()
         #convert verilog defines into C file
         if self.define_file:
-	    read_file = os.path.join(self.sim_root,"../src",self.define_file)
+	    read_file = os.path.join(self.src_root,self.define_file)
 	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h')
 	    utils.convert(read_file, write_file)
 
