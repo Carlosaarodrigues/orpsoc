@@ -34,7 +34,7 @@ class Launcher:
             fV = open (read_file,'r')
             fC = open (write_file,'w')
             fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
-            fC.write("//source file --> " + os.path.join(self.sim_root,"../src",self.define_file)+"\n")
+            fC.write("//source file --> " + read_file + "\n")
             for line in fV:
                 Sline=line.split('`',1)
                 if len(Sline) == 1:
