@@ -78,18 +78,9 @@ class Verilator(Simulator):
         f.close()
         #convert verilog defines into C file
         if self.define_file:
-            fV = open (os.path.join(self.sim_root,"../src",self.define_file),'r')
-            fC = open (os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h'),'w')
-            fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
-            fC.write("//source file --> " + os.path.join(self.sim_root,"../src",self.define_file)+"\n")
-            for line in fV:
-                Sline=line.split('`',1)
-                if len(Sline) == 1:
-                    fC.write(Sline[0])
-                else:
-                    fC.write(Sline[0]+"#"+Sline[1])
-            fC.close
-            fV.close
+	    read_file = os.path.join(self.sim_root,"../src",self.define_file)
+	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h')
+	    utils.convert(read_file, write_file)
 
         
     def build(self):
