@@ -14,7 +14,10 @@ class Source(Exception):
 class Verilator(Simulator):
 
     def __init__(self, system):
+	print "aqui 5"
         super(Verilator, self).__init__(system)
+	print str(system)
+	print "aqui 6"
 
         self.verilator_options = []
         self.src_files = []
@@ -163,7 +166,6 @@ class Verilator(Simulator):
 	args += ['-DVL_PRINTF=printf']
 	args += ['-DVM_TRACE=1']
 	args += ['-DVM_COVERAGE=0']
-	args += [os.getenv('SYSTEMC_CXX_FLAGS')]
 	args += ['-I'+os.getenv('SYSTEMC_INCLUDE')]
 	args += ['-Wno-deprecated']
 	args += [os.getenv('SYSTEMC_CXX_FLAGS')]

@@ -25,6 +25,7 @@ class Simulator(object):
             
         self.vpi_modules = []
 
+	print "aqui1"+ self.system.name + str(super)
         self.cm = CoreManager()
         self.cores = self.cm.get_depends(self.system.name)
 

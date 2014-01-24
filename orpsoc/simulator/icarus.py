@@ -9,10 +9,23 @@ class SimulatorIcarus(Simulator):
 
     def __init__(self, system):
         logger.debug('__init__() *Entered*')
+
+	self.iverilog_options
+
+        if system.icarus is not None:
+            self._load_dict(system.icarus)
         super(SimulatorIcarus, self).__init__(system)
         self.sim_root = os.path.join(self.build_root, 'sim-icarus')
 
         logger.debug('__init__() -Done-')
+
+    def _load_dict(self,items):
+	for item in items:
+	    if item == iverilog_options:
+		self.iverilog_options = items.get(item).split()
+            else:
+                print("Warning: Unknown item '" + item +"' in verilator section")
+		
 
     def configure(self):
         logger.debug('configure() *Entered*')

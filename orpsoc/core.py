@@ -19,6 +19,7 @@ class Core:
                      '\n    name=' + str(name) + 
                      '\n    core_root=' + str(core_root)
                     )
+	print str(core_file) +"$" + str(name) +"$" + str(core_root) 
         if core_file:
             basename = os.path.basename(core_file)
         self.depend = []
