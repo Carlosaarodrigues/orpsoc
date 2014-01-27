@@ -1,20 +1,18 @@
 import subprocess
 
 class Launcher:
-    def __init__(self, cmd, args=[], shell=False, cwd=None, stderr=None, errormsg=None, env=None):
+    def __init__(self, cmd, args=[], shell=False, cwd=None, stderr=None, errormsg=None):
         self.cmd      = cmd
         self.args     = args
         self.shell    = shell
         self.cwd      = cwd
         self.stderr   = stderr
         self.errormsg = errormsg
-        self.env      = env
 
     def run(self):
         try:
             subprocess.check_call([self.cmd] + self.args,
                                   cwd = self.cwd,
-                                  env = self.env,
                                   shell = self.shell,
                                   stderr = self.stderr,
                                   stdin=subprocess.PIPE),
@@ -30,6 +28,21 @@ class Launcher:
 
     def __str__(self):
         return self.cmd + ' ' + ' '.join(self.args)
+
+
+def convert( read_file, write_file):
+            fV = open (read_file,'r')
+            fC = open (write_file,'w')
+            fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
+            fC.write("//source file --> " + read_file + "\n")
+            for line in fV:
+                Sline=line.split('`',1)
+                if len(Sline) == 1:
+                    fC.write(Sline[0])
+                else:
+                    fC.write(Sline[0]+"#"+Sline[1])
+            fC.close
+            fV.close
         
 def launch(cmd, args=[], shell=False, cwd=None, stderr=None):
     try:

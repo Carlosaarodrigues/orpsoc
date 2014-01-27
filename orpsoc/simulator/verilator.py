@@ -4,9 +4,15 @@ import subprocess
 from orpsoc import utils
 from .simulator import Simulator
 
+class Source(Exception):
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
+
 class Verilator(Simulator):
 
-    TOOL_NAME = 'VERILATOR'
     def __init__(self, system):
         super(Verilator, self).__init__(system)
 
@@ -25,6 +31,8 @@ class Verilator(Simulator):
             print("Environment variable VERILATOR_ROOT was not found. It should be set to the verilator install path")
             exit(1)
         self.sim_root = os.path.join(self.build_root, 'sim-verilator')
+	self.src_root = os.path.join(self.build_root, 'src')
+
 
     def _load_dict(self, items):
         for item in items:
@@ -79,18 +87,9 @@ class Verilator(Simulator):
         f.close()
         #convert verilog defines into C file
         if self.define_file:
-            fV = open (os.path.join(self.sim_root,"../src",self.define_file),'r')
-            fC = open (os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h'),'w')
-            fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
-            fC.write("//source file --> " + os.path.join(self.sim_root,"../src",self.define_file)+"\n")
-            for line in fV:
-                Sline=line.split('`',1)
-                if len(Sline) == 1:
-                    fC.write(Sline[0])
-                else:
-                    fC.write(Sline[0]+"#"+Sline[1])
-            fC.close
-            fV.close
+	    read_file = os.path.join(self.src_root,self.define_file)
+	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(self.define_file))[0]+'.h')
+	    utils.convert(read_file, write_file)
 
         
     def build(self):
@@ -100,8 +99,8 @@ class Verilator(Simulator):
         elif self.src_type == 'systemC':
             self.build_SysC()
         else:
-            print("Source type not available. 'C' or 'systemC'")
-            exit(1)
+	    raise Source(self.src_type)
+
 
     def build_C(self):
         args = ['-c']
@@ -113,23 +112,22 @@ class Verilator(Simulator):
                          cwd=self.sim_root)
 
         object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
-        
-        try:
-            cmd = os.path.join(self.verilator_root,'bin','verilator')
-            subprocess.check_call(['bash', cmd,
-                                   '--cc',
-                                   '-f', self.verilator_file,
-                                   '--top-module', 'orpsoc_top',
-                                   '--exe'] + 
-                                  [os.path.join(self.sim_root, s) for s in object_files] + [self.tb_toplevel] + self.verilator_options,
-                                  stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'),
-                                  cwd = os.path.join(self.sim_root))
-        except OSError:
-            print("Error: Command verilator not found. Make sure it is in $PATH")
-            exit(1)
-        except subprocess.CalledProcessError:
-            print("Error: Failed to compile. See " + os.path.join(self.sim_root,'verilator.log') + " for details")
-            exit(1)
+
+	cmd = os.path.join(self.verilator_root,'bin','verilator')
+
+	args = [cmd]
+	args += ['--cc']
+	args += ['-f']
+	args += [self.verilator_file]
+	args += ['--top-module']
+	args += ['orpsoc_top']
+	args += ['--exe']
+	args += [os.path.join(self.sim_root, s) for s in object_files]
+	args += [self.tb_toplevel]
+	args += self.verilator_options
+
+	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'))
+
         utils.launch('make -f Vorpsoc_top.mk Vorpsoc_top',
                      cwd=os.path.join(self.sim_root, 'obj_dir'),
                      shell=True)
@@ -139,18 +137,21 @@ class Verilator(Simulator):
 	object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
 
 	#verilog
-	try:
-	    cmd = os.path.join(self.verilator_root,'bin','verilator') 
-	    subprocess.check_call(['bash',cmd,'--sc','--top-module', 'orpsoc_top','-f',self.verilator_file,'--exe']+
-				    [os.path.join(self.sim_root, s) for s in object_files]+[self.tb_toplevel]+self.verilator_options,
-            			    cwd = os.path.join(self.sim_root),
-	    			    stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'))
-        except OSError:
-            print("Error: Command verilator not found. Make sure it is in $PATH")
-            exit(1)
-        except subprocess.CalledProcessError:
-            print("Error: Failed to compile. See " + os.path.join(self.sim_root,'verilator.log') + " for details")
-            exit(1)
+	cmd = os.path.join(self.verilator_root,'bin','verilator') 
+
+	args = [cmd]
+	args += ['--sc']
+	args += ['--top-module']
+	args += ['orpsoc_top']
+	args += ['-f']
+	args += [self.verilator_file]
+	args += ['--exe']
+	args += [os.path.join(self.sim_root, s) for s in object_files]
+	args += [self.tb_toplevel]
+	args += self.verilator_options
+
+	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'))
+
 
 	 #src_files	
 	args = ['-I.']
