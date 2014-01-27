@@ -11,6 +11,7 @@ class SimulatorIcarus(Simulator):
         logger.debug('__init__() *Entered*')
 
 	self.iverilog_options
+	self.depend
 
         if system.icarus is not None:
             self._load_dict(system.icarus)
@@ -23,6 +24,8 @@ class SimulatorIcarus(Simulator):
 	for item in items:
 	    if item == iverilog_options:
 		self.iverilog_options = items.get(item).split()
+	    elif item == depend:
+		self.depend = items.get(item).split()
             else:
                 print("Warning: Unknown item '" + item +"' in verilator section")
 		
@@ -38,6 +41,7 @@ class SimulatorIcarus(Simulator):
         icarus_file = 'icarus.scr'
 
         f = open(os.path.join(self.sim_root,icarus_file),'w')
+	print str(self.verilog.include_dirs)
 
         for include_dir in self.verilog.include_dirs:
             f.write("+incdir+" + os.path.abspath(include_dir) + '\n')

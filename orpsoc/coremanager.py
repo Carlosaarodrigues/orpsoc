@@ -84,7 +84,6 @@ class CoreManager(object):
 
     def get_core(self, name):
         if name in self._cores:
-	    print str(name)+ "&"+ str(self._cores)
             return self._cores[name]
         else:
             return None

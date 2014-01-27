@@ -14,10 +14,7 @@ class Source(Exception):
 class Verilator(Simulator):
 
     def __init__(self, system):
-	print "aqui 5"
         super(Verilator, self).__init__(system)
-	print str(system)
-	print "aqui 6"
 
         self.verilator_options = []
         self.src_files = []
