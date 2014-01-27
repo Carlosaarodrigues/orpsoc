@@ -26,8 +26,37 @@ class SimulatorIcarus(Simulator):
 		self.iverilog_options = items.get(item).split()
 	    elif item == depend:
 		self.depend = items.get(item).split()
+		icarus_depend()
             else:
                 print("Warning: Unknown item '" + item +"' in verilator section")
+
+    def icarus_depend(self):
+
+        self.cores = self.cm.get_depends(self.depend)
+
+        for core_name in self.cores:
+            logger.debug('core_name=' + core_name)
+            core = self.cm.get_core(core_name)
+	    print str(core)
+
+            if core.verilog:
+                if core.verilog.include_dirs:
+                    logger.debug('core.include_dirs=' + str(core.verilog.include_dirs))
+                else:
+                    logger.debug('core.include_dirs=None')
+                self.verilog.include_dirs    += [os.path.join(self.src_root, core_name, d) for d in core.verilog.include_dirs]
+                self.verilog.tb_include_dirs += [os.path.join(self.src_root, core_name, d) for d in core.verilog.tb_include_dirs]
+                self.verilog.src_files       += [os.path.join(self.src_root, core_name, f) for f in core.verilog.src_files]
+                self.verilog.tb_src_files    += [os.path.join(self.src_root, core_name, f) for f in core.verilog.tb_src_files]
+
+            if core.vpi:
+                vpi_module = {}
+                core_root = os.path.join(self.src_root, core_name)
+                vpi_module['include_dirs']  = [os.path.abspath(os.path.join(core_root, d)) for d in core.vpi.include_dirs]
+                vpi_module['src_files']     = [os.path.abspath(os.path.join(core_root, f)) for f in core.vpi.src_files]
+                vpi_module['name']          = core.vpi.name
+                vpi_module['libs']          = [l for l in core.vpi.libs]
+                self.vpi_modules += [vpi_module]
 		
 
     def configure(self):
