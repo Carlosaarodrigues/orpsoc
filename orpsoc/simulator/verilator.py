@@ -52,7 +52,7 @@ class Verilator(Simulator):
             elif item == 'source_type':
                 self.src_type = items.get(item)
             elif item == 'define_files':
-                self.define_files = items.get(item)
+                self.define_files = items.get(item).split()
             else:
                 print("Warning: Unknown item '" + item +"' in verilator section")
 
@@ -91,8 +91,8 @@ class Verilator(Simulator):
         f.close()
         #convert verilog defines into C file
         for files in self.define_files:
-	    read_file = os.path.join(self.src_root,file)
-	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(file))[0]+'.h')
+	    read_file = os.path.join(self.src_root,files)
+	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(files))[0]+'.h')
 	    utils.convert(read_file, write_file)
 
         
