@@ -130,7 +130,7 @@ class Verilator(Simulator):
 	args += [self.tb_toplevel]
 	args += self.verilator_options
 
-	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'))
+	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
 
         utils.launch('make -f Vorpsoc_top.mk Vorpsoc_top',
                      cwd=os.path.join(self.sim_root, 'obj_dir'),
@@ -154,7 +154,7 @@ class Verilator(Simulator):
 	args += [self.tb_toplevel]
 	args += self.verilator_options
 
-	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = open(os.path.join(self.sim_root,'verilator.log'),'w'))
+	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
 
 
 	 #src_files	
