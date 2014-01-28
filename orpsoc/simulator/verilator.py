@@ -13,7 +13,10 @@ class Source(Exception):
 
 class Verilator(Simulator):
 
+    TOOL_NAME = 'VERILATOR'
     def __init__(self, system):
+        self.cores = []
+
         super(Verilator, self).__init__(system)
 
         self.verilator_options = []
@@ -23,6 +26,7 @@ class Verilator(Simulator):
         self.tb_toplevel = ""
         self.src_type = 'C'
         self.define_file = []
+
 
         if system.verilator is not None:
             self._load_dict(system.verilator)

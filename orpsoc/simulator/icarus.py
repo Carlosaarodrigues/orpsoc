@@ -13,7 +13,7 @@ class SimulatorIcarus(Simulator):
         logger.debug('__init__() *Entered*')
 
         self.cores = []
-	self.iverilog_options
+	self.iverilog_options = []
 
         if system.icarus is not None:
             self._load_dict(system.icarus)
