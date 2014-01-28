@@ -27,7 +27,7 @@ class Simulator(object):
         self.vpi_modules = []
 
         self.cm = CoreManager()
-        self.cores = self.cm.get_depends(self.system.name)
+        self.cores += self.cm.get_depends(self.system.name)
 
         self.env = os.environ.copy()
         self.env['CORE_ROOT'] = os.path.abspath(self.system.core_root)
