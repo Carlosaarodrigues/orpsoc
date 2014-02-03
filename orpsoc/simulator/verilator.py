@@ -35,7 +35,7 @@ class Verilator(Simulator):
             print("Environment variable VERILATOR_ROOT was not found. It should be set to the verilator install path")
             exit(1)
         self.sim_root = os.path.join(self.build_root, 'sim-verilator')
-	self.src_root = os.path.join(self.build_root, 'src')
+        self.src_root = os.path.join(self.build_root, 'src')
 
 
     def _load_dict(self, items):
@@ -91,9 +91,9 @@ class Verilator(Simulator):
         f.close()
         #convert verilog defines into C file
         for files in self.define_files:
-	    read_file = os.path.join(self.src_root,files)
-	    write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(files))[0]+'.h')
-	    utils.convert(read_file, write_file)
+            read_file = os.path.join(self.src_root,files)
+            write_file = os.path.join(os.path.dirname(os.path.join(self.sim_root,self.tb_toplevel)),os.path.splitext(os.path.basename(files))[0]+'.h')
+            utils.convert_V2H(read_file, write_file)
 
         
     def build(self):
@@ -103,7 +103,7 @@ class Verilator(Simulator):
         elif self.src_type == 'systemC':
             self.build_SysC()
         else:
-	    raise Source(self.src_type)
+            raise Source(self.src_type)
 
 
     def build_C(self):
@@ -117,20 +117,20 @@ class Verilator(Simulator):
 
         object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
 
-	cmd = os.path.join(self.verilator_root,'bin','verilator')
+        cmd = os.path.join(self.verilator_root,'bin','verilator')
 
-	args = [cmd]
-	args += ['--cc']
-	args += ['-f']
-	args += [self.verilator_file]
-	args += ['--top-module']
-	args += ['orpsoc_top']
-	args += ['--exe']
-	args += [os.path.join(self.sim_root, s) for s in object_files]
-	args += [self.tb_toplevel]
-	args += self.verilator_options
+        args = [cmd]
+        args += ['--cc']
+        args += ['-f']
+        args += [self.verilator_file]
+        args += ['--top-module']
+        args += ['orpsoc_top']
+        args += ['--exe']
+        args += [os.path.join(self.sim_root, s) for s in object_files]
+        args += [self.tb_toplevel]
+        args += self.verilator_options
 
-	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
+        utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
 
         utils.launch('make -f Vorpsoc_top.mk Vorpsoc_top',
                      cwd=os.path.join(self.sim_root, 'obj_dir'),
@@ -138,48 +138,48 @@ class Verilator(Simulator):
 
     def build_SysC(self):
 
-	object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
+        object_files = [os.path.splitext(os.path.basename(s))[0]+'.o' for s in self.src_files]
 
-	#verilog
-	cmd = os.path.join(self.verilator_root,'bin','verilator') 
+        #verilog
+        cmd = os.path.join(self.verilator_root,'bin','verilator') 
 
-	args = [cmd]
-	args += ['--sc']
-	args += ['--top-module']
-	args += ['orpsoc_top']
-	args += ['-f']
-	args += [self.verilator_file]
-	args += ['--exe']
-	args += [os.path.join(self.sim_root, s) for s in object_files]
-	args += [self.tb_toplevel]
-	args += self.verilator_options
+        args = [cmd]
+        args += ['--sc']
+        args += ['--top-module']
+        args += ['orpsoc_top']
+        args += ['-f']
+        args += [self.verilator_file]
+        args += ['--exe']
+        args += [os.path.join(self.sim_root, s) for s in object_files]
+        args += [self.tb_toplevel]
+        args += self.verilator_options
 
-	utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
+        utils.launch('bash', args, cwd = os.path.join(self.sim_root), stderr = os.path.join(self.sim_root,'verilator.log'))
 
 
-	 #src_files	
-	args = ['-I.']
-	args += ['-MMD']
-	args += ['-I'+s for s in self.include_dirs]
-	args += ['-Iobj_dir']
-	args += ['-I'+os.path.join(self.verilator_root,'include')]
-	args += ['-I'+os.path.join(self.verilator_root,'include', 'vltstd')]  
-	args += ['-DVL_PRINTF=printf']
-	args += ['-DVM_TRACE=1']
-	args += ['-DVM_COVERAGE=0']
-	args += [os.getenv('SYSTEMC_CXX_FLAGS')]
-	args += ['-I'+os.getenv('SYSTEMC_INCLUDE')]
-	args += ['-Wno-deprecated']
-	args += [os.getenv('SYSTEMC_CXX_FLAGS')]
-	args += ['-c']
-	args += ['-g']
+         #src_files        
+        args = ['-I.']
+        args += ['-MMD']
+        args += ['-I'+s for s in self.include_dirs]
+        args += ['-Iobj_dir']
+        args += ['-I'+os.path.join(self.verilator_root,'include')]
+        args += ['-I'+os.path.join(self.verilator_root,'include', 'vltstd')]  
+        args += ['-DVL_PRINTF=printf']
+        args += ['-DVM_TRACE=1']
+        args += ['-DVM_COVERAGE=0']
+        args += [os.getenv('SYSTEMC_CXX_FLAGS')]
+        args += ['-I'+os.getenv('SYSTEMC_INCLUDE')]
+        args += ['-Wno-deprecated']
+        args += [os.getenv('SYSTEMC_CXX_FLAGS')]
+        args += ['-c']
+        args += ['-g']
 
-	for src_file in self.src_files:
-	    print("Compiling " + src_file)
-	    utils.launch('g++',args + ['-o' + os.path.splitext(os.path.basename(src_file))[0]+'.o']+ [src_file],
-				cwd=self.sim_root)
+        for src_file in self.src_files:
+            print("Compiling " + src_file)
+            utils.launch('g++',args + ['-o' + os.path.splitext(os.path.basename(src_file))[0]+'.o']+ [src_file],
+                                cwd=self.sim_root)
 
-	#tb_toplevel
+        #tb_toplevel
         utils.launch('make -f Vorpsoc_top.mk Vorpsoc_top',
                      cwd=os.path.join(self.sim_root, 'obj_dir'),
                      shell=True)

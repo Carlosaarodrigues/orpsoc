@@ -13,7 +13,7 @@ class SimulatorIcarus(Simulator):
         logger.debug('__init__() *Entered*')
 
         self.cores = []
-	self.iverilog_options = []
+        self.iverilog_options = []
 
         if system.icarus is not None:
             self._load_dict(system.icarus)
@@ -23,11 +23,11 @@ class SimulatorIcarus(Simulator):
         logger.debug('__init__() -Done-')
 
     def _load_dict(self,items):
-	for item in items:
-	    if item == 'iverilog_options':
-		self.iverilog_options = items.get(item).split()
-	    elif item == 'depend':
-		self.cores = items.get(item).split()
+        for item in items:
+            if item == 'iverilog_options':
+                self.iverilog_options = items.get(item).split()
+            elif item == 'depend':
+                self.cores = items.get(item).split()
             else:
                 print("Warning: Unknown item '" + item +"' in icarus section")
 
@@ -37,6 +37,7 @@ class SimulatorIcarus(Simulator):
         super(SimulatorIcarus, self).configure()
         self._write_config_files()
         logger.debug('configure()  -Done-')
+
 
     def _write_config_files(self):
         logger.debug('_write_config_files() *Entered*')
@@ -59,7 +60,6 @@ class SimulatorIcarus(Simulator):
     def build(self):
         logger.debug('build() *Entered*')
         super(SimulatorIcarus, self).build()
-        
         #Build VPI modules
         for vpi_module in self.vpi_modules:
             try:
@@ -75,7 +75,7 @@ class SimulatorIcarus(Simulator):
             except subprocess.CalledProcessError:
                 print("Error: Failed to compile VPI library " + vpi_module['name'])
                 exit(1)
-                                      
+                       
         #Build simulation model
         if subprocess.call(['iverilog',
                             '-s', self.toplevel,
@@ -86,6 +86,7 @@ class SimulatorIcarus(Simulator):
             print("Error: Compiled failed")
             exit(1)
         logger.debug('build() -Done-')
+
         
     def run(self, args):
         logger.debug('run() *Entered*')

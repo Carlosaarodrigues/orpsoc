@@ -32,7 +32,7 @@ class Launcher:
         return self.cmd + ' ' + ' '.join(self.args)
 
 
-def convert( read_file, write_file):
+def convert_V2H( read_file, write_file):
             fV = open (read_file,'r')
             fC = open (write_file,'w')
             fC.write("//File auto-converted the Verilog to C. converted by ORPSOC//\n")
