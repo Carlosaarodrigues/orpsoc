@@ -47,11 +47,15 @@ def convert( read_file, write_file):
             fV.close
         
 def launch(cmd, args=[], shell=False, cwd=None, stderr=None):
+    stderr_file = None
+    if stderr != None
+        stderr_file = open(stderr, 'w')
+
     try:
         subprocess.check_call([cmd] + args,
                               cwd = cwd,
                               shell = shell,
-                              stderr = open(stderr, 'w')),
+                              stderr = stderr_file),
     except OSError:
         print("Error: Command " + cmd + " not found. Make sure it is in $PATH")
         exit(1)
