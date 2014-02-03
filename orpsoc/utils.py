@@ -51,7 +51,7 @@ def launch(cmd, args=[], shell=False, cwd=None, stderr=None):
         subprocess.check_call([cmd] + args,
                               cwd = cwd,
                               shell = shell,
-                              stderr = open(stderr, 'w')),
+                              stderr = stderr),
     except OSError:
         print("Error: Command " + cmd + " not found. Make sure it is in $PATH")
         exit(1)
