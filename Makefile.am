@@ -37,6 +37,11 @@ build_PYTHON =      \
 
 builddir = $(orpsocdir)/build
 
+test_PYTHON =      \
+ orpsoc/test/__init__.py  
+
+testdir = $(orpsocdir)/test
+
 EXTRA_DIST = INSTALL
 
 SUBDIRS = bin

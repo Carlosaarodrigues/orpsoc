@@ -17,6 +17,7 @@ from orpsoc.coremanager import CoreManager, DependencyError
 from orpsoc.simulator import SimulatorFactory
 from orpsoc.system import System
 from orpsoc.core import Core
+from orpsoc.test import Tester
 import logging
 
 logging.basicConfig(filename='orpsoc.log', filemode='w', level=logging.DEBUG)
@@ -132,6 +133,10 @@ def sim(known, remaining):
     if not known.build_only:
         sim.run(remaining)
     logger.debug('sim() -Done-')
+
+def tests(known, remaining):
+    tests = Tester()
+
 
 def run(known, remaining):
     try:
