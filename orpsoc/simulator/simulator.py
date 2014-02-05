@@ -28,7 +28,7 @@ class Simulator(object):
 
         self.cm = CoreManager()
         self.cores += self.cm.get_depends(self.system.name)
-	logger.debug( "depend -->  " +str (self.cores))
+        logger.debug( "depend -->  " +str (self.cores))
 
         self.env = os.environ.copy()
         self.env['CORE_ROOT'] = os.path.abspath(self.system.core_root)
