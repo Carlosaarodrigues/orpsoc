@@ -129,13 +129,19 @@ def sim(known, remaining):
         exit(1)
     if known.force or not os.path.exists(sim.sim_root):
         sim.configure()
-        sim.build()
+        try:
+            sim.build()
+        except Source as e:
+            print( e.value + " Source type don't valid. choose: C or systemC")
+            exit(1)
     if not known.build_only:
         sim.run(remaining)
     logger.debug('sim() -Done-')
 
-def tests(known, remaining):
-    tests = Tester()
+def test(known, remaining):
+    tes = Tester(known.test, known.folder)
+#p roaqui um try com exce do sim
+    tes.run(known)
 
 
 def run(known, remaining):
@@ -194,6 +200,13 @@ if __name__ == "__main__":
     parser_sim.add_argument('--dry-run', action='store_true')
     parser_sim.add_argument('system',help='Select a system to simulate') #, choices = Config().get_systems())
     parser_sim.set_defaults(func=sim)
+
+    parser_test = subparsers.add_parser('test', help='testaerdfas')
+    parser_test.add_argument('--test', nargs=1, help='define run test')
+    parser_test.add_argument('--mode', nargs=1, help='test with verilator, icarus, board. default verilator')
+    parser_test.add_argument('--folder', nargs=1, help='Alternative test path (root). default path ./orpsoc/orpsoc/test/')
+    parser_test.add_argument('system',help='Select a system to test')
+    parser_test.set_defaults(func=test)
 
     known, remaining = parser.parse_known_args()
 
