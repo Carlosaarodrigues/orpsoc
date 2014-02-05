@@ -45,7 +45,6 @@ class Verilator(Simulator):
             elif item == 'include_files':
                 self.include_files = items.get(item).split()
                 self.include_dirs  = list(set(map(os.path.dirname, self.include_files)))
-                
             elif item == 'tb_toplevel':
                 self.tb_toplevel = items.get(item)
             elif item == 'source_type':
@@ -81,12 +80,9 @@ class Verilator(Simulator):
         f = open(os.path.join(self.sim_root,self.verilator_file),'w')
 
         for include_dir in self.verilog.include_dirs:
-            if include_dir.find('jtag_vpi') == -1:
-                f.write("+incdir+" + os.path.abspath(include_dir) + '\n')
-
+            f.write("+incdir+" + os.path.abspath(include_dir) + '\n')
         for src_file in self.verilog.src_files:
-            if src_file.find('jtag_vpi') == -1:
-                f.write(os.path.abspath(src_file) + '\n')
+            f.write(os.path.abspath(src_file) + '\n')
         f.close()
         #convert verilog defines into C file
         for files in self.define_files:
