@@ -166,7 +166,6 @@ class Verilator(Simulator):
         args += ['-DVL_PRINTF=printf']
         args += ['-DVM_TRACE=1']
         args += ['-DVM_COVERAGE=0']
-        args += [os.getenv('SYSTEMC_CXX_FLAGS')]
         args += ['-I'+os.getenv('SYSTEMC_INCLUDE')]
         args += ['-Wno-deprecated']
         args += [os.getenv('SYSTEMC_CXX_FLAGS')]
