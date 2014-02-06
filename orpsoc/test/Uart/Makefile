@@ -8,18 +8,19 @@ endif
 
 OR1K_TOOL_PREFIX = or1k-elf-
 OR1K_CC = $(OR1K_TOOL_PREFIX)gcc
-OR1K_CFLAGS = -c -Wall
+OR1K_CFLAGS = -c
+FLAGS_LINK = -mboard=or1ksim-uart 
 
-SOURCES = hello.c
+SOURCES = uart.c
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = elf_file
 
-all: $(SOURCES) $(EXECUTABLE)
+all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(Q)$(OR1K_CC) $< -o $@
+	$(Q)$(OR1K_CC) $(FLAGS_LINK)$< -o $@
 
-%.o: %.cpp
+%.o: %.c
 	$(Q)$(OR1K_CC) $(OR1K_CFLAGS) $< -o $@
 
 clean:

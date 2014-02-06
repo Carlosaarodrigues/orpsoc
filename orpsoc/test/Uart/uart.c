@@ -4,7 +4,7 @@ int main()
 {
 	char f;
     scanf ("%c",&f);
-    printf("Hello World  ---> %c  \r\n",f);
+    printf("%c  \r\n",f);
 
-return (1);
+return(0);
 }

@@ -40,28 +40,39 @@ class Tester(object):
     def run(self,system):
 	for test in self.list_tests:
             self.build_C(test)
+
+            os.mkfifo(os.path.join(self.orpsoc_root,'RX'))
+            os.mkfifo(os.path.join(self.orpsoc_root,'TX'))
+            self.fifoRX = open (os.path.join(self.orpsoc_root,'RX'),'r+',0)
+            self.fifoTX = open (os.path.join(self.orpsoc_root,'TX'),'w+',0)
+
             self.elf_file = ['-f', os.path.join(self.orpsoc_root, test) + '/elf_file']
 	    self.system = system.system
 	    self.sim = system.mode[0]
-            self.force = None
             if test == "Rom":
 	        self.force = True
-            self.run_simulator(self.system, self.sim , self.force, self.elf_file)
+            self.fifoTX.write("J\n")
+            self.run_simulator(self.system, self.sim , self.elf_file)
+
+	    print "Pyton ->" + self.fifoRX.read()
+            self.fifoRX.close
+            self.fifoTX.close
+            os.remove(os.path.join(self.orpsoc_root,'RX'))
+            os.remove(os.path.join(self.orpsoc_root,'TX'))
 
 
-    def run_simulator(self, system, sim, force, elf_file ):
+    def run_simulator(self, system, sim, elf_file ):
         core = CoreManager().get_core(system)
         if core == None:
             print("Could not find any core named " + system)
             exit(1)
         sim = SimulatorFactory(sim, core) #por a except se não encontrar o simulador
-        if force or not os.path.exists(sim.sim_root) or self.first:
+        if not os.path.exists(sim.sim_root) or self.first:
             sim.configure()
             sim.build()
             self.first = None
+	print elf_file
         sim.run(elf_file)
-        logger.debug('sim() -Done-')
-
 
 
     def clean(self, test):
