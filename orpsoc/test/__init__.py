@@ -1,4 +1,5 @@
 import os
+import imp
 from orpsoc import utils
 from orpsoc.coremanager import CoreManager
 from orpsoc.simulator import SimulatorFactory
@@ -20,7 +21,6 @@ class Tester(object):
 	if "Rom" in self.list_tests:
 		self.list_tests.remove("Rom")
 		self.list_tests.append("Rom")
-        print "root-->  " + str(self.list_tests)
 
         if test:
             if test[0] in self.list_tests:
@@ -38,28 +38,25 @@ class Tester(object):
         utils.launch('make all', cwd=os.path.join(self.orpsoc_root, test), shell=True)
 
     def run(self,system):
+        self.result = open (os.path.join(self.orpsoc_root,'restults'),'w+',0)
+
+        self.result.write("tests with " + system.mode[0]+ '\n')
 	for test in self.list_tests:
             self.build_C(test)
 
-            os.mkfifo(os.path.join(self.orpsoc_root,'RX'))
-            os.mkfifo(os.path.join(self.orpsoc_root,'TX'))
-            self.fifoRX = open (os.path.join(self.orpsoc_root,'RX'),'r+',0)
-            self.fifoTX = open (os.path.join(self.orpsoc_root,'TX'),'w+',0)
-
             self.elf_file = ['-f', os.path.join(self.orpsoc_root, test) + '/elf_file']
 	    self.system = system.system
-	    self.sim = system.mode[0]
-            if test == "Rom":
-	        self.force = True
-            self.fifoTX.write("J\n")
-            self.run_simulator(self.system, self.sim , self.elf_file)
 
-	    print "Pyton ->" + self.fifoRX.read()
-            self.fifoRX.close
-            self.fifoTX.close
-            os.remove(os.path.join(self.orpsoc_root,'RX'))
-            os.remove(os.path.join(self.orpsoc_root,'TX'))
+            imp.load_source('Pe_test', os.path.join(self.orpsoc_root,test) + '/test.py')
+            import Pe_test
+            if system.mode[0] == 'verilator':
+                Pe_test.verilator(self)
+            if system.mode[0] == 'icarus':
+                Pe_test.icarus(self)
+            if system.mode[0] == 'board':
+                Pe_test.board(self)
 
+        self.result.close()
 
     def run_simulator(self, system, sim, elf_file ):
         core = CoreManager().get_core(system)
@@ -71,7 +68,6 @@ class Tester(object):
             sim.configure()
             sim.build()
             self.first = None
-	print elf_file
         sim.run(elf_file)
 
 
