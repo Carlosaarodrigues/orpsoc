@@ -9,21 +9,27 @@ endif
 OR1K_TOOL_PREFIX = or1k-elf-
 OR1K_CC = $(OR1K_TOOL_PREFIX)gcc
 OR1K_CFLAGS = -c
-FLAGS_LINK = -mboard=or1ksim-uart 
+FLAGS_SIM = -mboard=or1ksim-uart 
+FLAGS_BOARD = -mboard=de0_nano
 
 SOURCES = uart.c
 OBJECTS = $(SOURCES:.cpp=.o)
-EXECUTABLE = elf_file
+EXECUTABLE_SIM = elf_file_sim
+EXECUTABLE_BOARD = elf_file_board
 
-all: $(EXECUTABLE)
+sim: $(EXECUTABLE_SIM)
+board: $(EXECUTABLE_BOARD)
 
-$(EXECUTABLE): $(OBJECTS)
-	$(Q)$(OR1K_CC) $(FLAGS_LINK)$< -o $@
+$(EXECUTABLE_BOARD): $(OBJECTS)
+	$(Q)$(OR1K_CC) $(FLAGS_BOARD) $< -o $@
+
+$(EXECUTABLE_SIM): $(OBJECTS)
+	$(Q)$(OR1K_CC) $(FLAGS_SIM) $< -o $@
 
 %.o: %.c
 	$(Q)$(OR1K_CC) $(OR1K_CFLAGS) $< -o $@
 
 clean:
-	$(Q)rm -f *.o $(EXECUTABLE)
+	$(Q)rm -f *.o $(EXECUTABLE_SIM) $(EXECUTABLE_BOARD)
 
 

@@ -1,13 +1,16 @@
 import os
 import imp
+import subprocess
+import time
 from orpsoc import utils
 from orpsoc.coremanager import CoreManager
 from orpsoc.simulator import SimulatorFactory
+from orpsoc.build import BackendFactory
 
 class Tester(object):
     def __init__(self, test,folder):
         self.orpsoc_root = '/home/carlos/projecto/orpsoc/orpsoc/test'
-	self.first = True
+	self.first = None
 
         if folder:
             if os.path.exists(folder[0]):
@@ -32,31 +35,53 @@ class Tester(object):
 
 
 
-    def build_C(self, test):
+    def build_C(self, test, equip):
         self.clean(test)
-        print " Code C building of test " + test
-        utils.launch('make all', cwd=os.path.join(self.orpsoc_root, test), shell=True)
+        print "Building C " + test + " test for " + equip
+        print 'make ' + equip 
+        utils.launch('make ' + equip , cwd=os.path.join(self.orpsoc_root, test), shell=True)
 
     def run(self,system):
         self.result = open (os.path.join(self.orpsoc_root,'restults'),'w+',0)
-
         self.result.write("tests with " + system.mode[0]+ '\n')
-	for test in self.list_tests:
-            self.build_C(test)
 
-            self.elf_file = ['-f', os.path.join(self.orpsoc_root, test) + '/elf_file']
-	    self.system = system.system
+        self.system = system.system
+
+        if system.mode[0] == 'board':
+            #build verilog
+            #self.run_build(self.system) #descomentar isto
+            #send soft_elf "quartus_pgm --mode=jtag -o p\;build/"system"/bld-quartus/de0_nano.sof"
+
+            cmd = "quartus_pgm --mode=jtag -o p\;build/" + self.system + "/bld-quartus/de0_nano.sof"
+            #os.system(cmd) #descomentar
+
+            print "lauch OpenOCD"
+            args = ['./src/openocd']
+            args += ['-s']
+            args += ['./tcl']
+            args += ['-f']
+            args += ['./tcl/interface/altera-usb-blaster.cfg']
+            args += ['-f']
+            args += ['./tcl/board/or1k_generic.cfg']
+            #self.process = subprocess.Popen(args,cwd ='/home/carlos/projecto/openocd') # descomentar isto
+
+            time.sleep(5)
+
+	for test in self.list_tests:
 
             imp.load_source('Pe_test', os.path.join(self.orpsoc_root,test) + '/test.py')
             import Pe_test
             if system.mode[0] == 'verilator':
-                Pe_test.verilator(self)
+                Pe_test.verilator(self,test)
             if system.mode[0] == 'icarus':
-                Pe_test.icarus(self)
+                Pe_test.icarus(self,test)
             if system.mode[0] == 'board':
-                Pe_test.board(self)
+                Pe_test.board(self,test)
 
         self.result.close()
+        if system.mode[0] == 'board':
+            #self.process.terminate() #descomentar
+            print "aqui"
 
     def run_simulator(self, system, sim, elf_file ):
         core = CoreManager().get_core(system)
@@ -70,11 +95,20 @@ class Tester(object):
             self.first = None
         sim.run(elf_file)
 
+    def run_build(self,system):
+        if system in CoreManager().get_systems():
+            core = CoreManager().get_core(system)
+            backend = BackendFactory(core.system)
+            backend.configure()
+            backend.build()
+        else:
+            print("Error: Can't find system " + known.system)
+
 
     def clean(self, test):
         utils.launch('make clean', cwd=os.path.join(self.orpsoc_root, test), shell=True)
 
     def clean_tests(self):
         for test in self.list_tests:
-            self.Clean(test)        
+            self.Clean(test)       
 
