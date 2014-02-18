@@ -35,7 +35,6 @@ class Verilator(Simulator):
             print("Environment variable VERILATOR_ROOT was not found. It should be set to the verilator install path")
             exit(1)
         self.sim_root = os.path.join(self.build_root, 'sim-verilator')
-        self.src_root = os.path.join(self.build_root, 'src')
 
 
     def _load_dict(self, items):

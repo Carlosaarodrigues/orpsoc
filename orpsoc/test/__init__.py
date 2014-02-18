@@ -10,7 +10,7 @@ from orpsoc.build import BackendFactory
 class Tester(object):
     def __init__(self, test,folder):
         self.orpsoc_root = '/home/carlos/projecto/orpsoc/orpsoc/test'
-	self.first = None
+	self.first = True
 
         if folder:
             if os.path.exists(folder[0]):
@@ -42,20 +42,27 @@ class Tester(object):
         utils.launch('make ' + equip , cwd=os.path.join(self.orpsoc_root, test), shell=True)
 
     def run(self,system):
-        self.result = open (os.path.join(self.orpsoc_root,'restults'),'w+',0)
-        self.result.write("tests with " + system.mode[0]+ '\n')
 
         self.system = system.system
+        self.mode = system.mode[0]
 
-        if system.mode[0] == 'board':
+        self.result = open (os.path.join(self.orpsoc_root,'restults'),'w+',0)
+        self.result.write("tests with " + self.mode+ '\n')
+
+        args = ['-rf']
+        args += ['build/'+self.system]
+        utils.launch('rm',args,cwd ='/home/carlos/projecto/orpsoc-build')
+
+        if self.mode == 'board':
             #build verilog
             #self.run_build(self.system) #descomentar isto
-            #send soft_elf "quartus_pgm --mode=jtag -o p\;build/"system"/bld-quartus/de0_nano.sof"
 
+            #send .sof
             cmd = "quartus_pgm --mode=jtag -o p\;build/" + self.system + "/bld-quartus/de0_nano.sof"
-            #os.system(cmd) #descomentar
+            os.system(cmd) #descomentar
 
-            print "lauch OpenOCD"
+
+            #lauch OpenOCD
             args = ['./src/openocd']
             args += ['-s']
             args += ['./tcl']
@@ -63,34 +70,36 @@ class Tester(object):
             args += ['./tcl/interface/altera-usb-blaster.cfg']
             args += ['-f']
             args += ['./tcl/board/or1k_generic.cfg']
-            #self.process = subprocess.Popen(args,cwd ='/home/carlos/projecto/openocd') # descomentar isto
+            self.process = subprocess.Popen(args,cwd ='/home/carlos/projecto/openocd') # descomentar isto
 
             time.sleep(5)
+
+        if self.mode == 'verilator':
+            self.configure_verilator( self.system, self.mode)
 
 	for test in self.list_tests:
 
             imp.load_source('Pe_test', os.path.join(self.orpsoc_root,test) + '/test.py')
             import Pe_test
-            if system.mode[0] == 'verilator':
+            if self.mode == 'verilator':
                 Pe_test.verilator(self,test)
-            if system.mode[0] == 'icarus':
+            if self.mode == 'icarus':
                 Pe_test.icarus(self,test)
-            if system.mode[0] == 'board':
+            if self.mode == 'board':
                 Pe_test.board(self,test)
 
         self.result.close()
-        if system.mode[0] == 'board':
-            #self.process.terminate() #descomentar
-            print "aqui"
+        if self.mode == 'board':
+            self.process.terminate() 
 
-    def run_simulator(self, system, sim, elf_file ):
+    def run_simulator(self, system, sim, elf_file = None ):
         core = CoreManager().get_core(system)
         if core == None:
             print("Could not find any core named " + system)
             exit(1)
         sim = SimulatorFactory(sim, core) #por a except se não encontrar o simulador
-        if not os.path.exists(sim.sim_root) or self.first:
-            sim.configure()
+        if  not os.path.exists(sim.sim_root) or self.first:
+            sim._write_config_files()
             sim.build()
             self.first = None
         sim.run(elf_file)
@@ -103,6 +112,18 @@ class Tester(object):
             backend.build()
         else:
             print("Error: Can't find system " + known.system)
+
+
+    def configure_verilator(self, system, sim):
+        core = CoreManager().get_core(system)
+        if core == None:
+            print("Could not find any core named " + system)
+            exit(1)
+        sim = SimulatorFactory(sim, core) #por a except se não encontrar o simulador
+	sim.configure()
+
+        cmd = "sed 's/\/\/#define UART_FIFO/#define UART_FIFO/' /home/carlos/projecto/orpsoc-cores/systems/de0_nano_sim/bench/verilator/UartSC.cpp > /home/carlos/projecto/orpsoc-build/build/de0_nano_sim/sim-verilator/bench/verilator/UartSC.cpp"
+        os.system(cmd)
 
 
     def clean(self, test):
