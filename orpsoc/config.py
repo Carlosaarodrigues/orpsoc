@@ -24,6 +24,8 @@ class Config(object):
         self.cache_root = None
         self.cores_root = []
         self.systems_root = None
+        self.orpsoc_root = None
+        self.openocd_root = None
 
         xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or \
                           os.path.join(os.path.expanduser('~'), '.config')
@@ -36,7 +38,7 @@ class Config(object):
         files_read = config.read(config_files)
         logger.debug('Found config files in ' + ':'.join(files_read))
 
-        for item in ['build_root', 'cache_root', 'systems_root']:
+        for item in ['build_root', 'cache_root', 'systems_root','orpsoc_root','openocd_root']:
             try:
                 setattr(self, item, config.get('main', item))
             except configparser.NoOptionError:

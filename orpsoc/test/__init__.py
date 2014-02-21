@@ -6,20 +6,23 @@ from orpsoc import utils
 from orpsoc.coremanager import CoreManager
 from orpsoc.simulator import SimulatorFactory
 from orpsoc.build import BackendFactory
+from orpsoc.config import Config
 
 class Tester(object):
     def __init__(self, test,folder):
-        self.orpsoc_root = '/home/carlos/projecto/orpsoc/orpsoc/test'
+        self.tests_root = os.path.join(Config().orpsoc_root,'/orpsoc/test')
+        self.openocd_root = Config().openocd_root
 	self.first = True
+        print self.tests
 
         if folder:
             if os.path.exists(folder[0]):
-                self.orpsoc_root = folder[0]
+                self.tests_root = folder[0]
             else:
                 print "Path " + test[0] + " not found." #fazer uma exception
                 exit(1)
 
-        self.list_tests = [d for d in os.listdir(self.orpsoc_root) if os.path.isdir(os.path.join(self.orpsoc_root, d))]
+        self.list_tests = [d for d in os.listdir(self.tests_root) if os.path.isdir(os.path.join(self.tests_root, d))]
 
 	if "Rom" in self.list_tests:
 		self.list_tests.remove("Rom")
@@ -39,14 +42,14 @@ class Tester(object):
         self.clean(test)
         print "Building C " + test + " test for " + equip
         print 'make ' + equip 
-        utils.launch('make ' + equip , cwd=os.path.join(self.orpsoc_root, test), shell=True)
+        utils.launch('make ' + equip , cwd=os.path.join(self.tests_root, test), shell=True)
 
     def run(self,system):
 
         self.system = system.system
         self.mode = system.mode[0]
 
-        self.result = open (os.path.join(self.orpsoc_root,'restults'),'w+',0)
+        self.result = open (os.path.join(self.tests_root,'restults'),'w+',0)
         self.result.write("tests with " + self.mode+ '\n')
 
         args = ['-rf']
@@ -79,7 +82,7 @@ class Tester(object):
 
 	for test in self.list_tests:
 
-            imp.load_source('Pe_test', os.path.join(self.orpsoc_root,test) + '/test.py')
+            imp.load_source('Pe_test', os.path.join(self.tests_root,test) + '/test.py')
             import Pe_test
             if self.mode == 'verilator':
                 Pe_test.verilator(self,test)
@@ -127,7 +130,7 @@ class Tester(object):
 
 
     def clean(self, test):
-        utils.launch('make clean', cwd=os.path.join(self.orpsoc_root, test), shell=True)
+        utils.launch('make clean', cwd=os.path.join(self.tests_root, test), shell=True)
 
     def clean_tests(self):
         for test in self.list_tests:

@@ -9,15 +9,15 @@ def verilator(self,test):
     self.result.write("Test Uart -->")
 
     self.build_C(test,'sim')
-    elf_file = ['-f', os.path.join(self.orpsoc_root, test) + '/elf_file_sim']
+    elf_file = ['-f', os.path.join(self.tests_root, test) + '/elf_file_sim']
 
     word = "Uart Test\n"
 
     #create and open fifos
-    os.mkfifo(os.path.join(self.orpsoc_root,'RX'))
-    os.mkfifo(os.path.join(self.orpsoc_root,'TX'))
-    RX = os.open (os.path.join(self.orpsoc_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
-    TX = open (os.path.join(self.orpsoc_root,'TX'),'w+',0)
+    os.mkfifo(os.path.join(self.tests_root,'RX'))
+    os.mkfifo(os.path.join(self.tests_root,'TX'))
+    RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
+    TX = open (os.path.join(self.tests_root,'TX'),'w+',0)
 
     TX.write(word)
     self.run_simulator(self.system, 'verilator' , elf_file)
@@ -33,8 +33,8 @@ def verilator(self,test):
     #close and remove fifos
     os.close(RX)
     TX.close
-    os.remove(os.path.join(self.orpsoc_root,'RX'))
-    os.remove(os.path.join(self.orpsoc_root,'TX'))
+    os.remove(os.path.join(self.tests_root,'RX'))
+    os.remove(os.path.join(self.tests_root,'TX'))
 
 
 def icarus(self,test):
@@ -50,7 +50,7 @@ def board(self,test):
     self.result.write("Test Uart -->")
     #build elf_file
     self.build_C(test,'board')
-    elf_file = os.path.join(self.orpsoc_root, test) + '/elf_file_board'
+    elf_file = os.path.join(self.tests_root, test) + '/elf_file_board'
 
     print "open Serial Port(UART)"
     ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1) # ver da excetpiom
