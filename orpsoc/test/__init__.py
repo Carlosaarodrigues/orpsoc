@@ -8,19 +8,54 @@ from orpsoc.simulator import SimulatorFactory
 from orpsoc.build import BackendFactory
 from orpsoc.config import Config
 
-class Tester(object):
-    def __init__(self, test,folder):
-        self.tests_root = os.path.join(Config().orpsoc_root,'/orpsoc/test')
-        self.openocd_root = Config().openocd_root
-	self.first = True
-        print self.tests
+class Tests_path(Exception): # não contra o caminho de testes
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
 
-        if folder:
-            if os.path.exists(folder[0]):
-                self.tests_root = folder[0]
+class Test(Exception): # não encontra o teste
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
+class OpenOCD (Exception): # não conetra o openocd
+     def __init__(self, cmd):
+         self.cmd = cmd
+     def __str__(self):
+         return repr(self.cmd)
+
+class Load_sof (Exception): # não concegue carregar o soffile
+     def __init__(self, cmd):
+         self.cmd = cmd
+     def __str__(self):
+         return repr(self.cmd)
+
+class Mode (Exception): # nao encotnra o mode
+     def __init__(self, mode):
+         self.mode = mode
+     def __str__(self):
+         return repr(self.mode)
+
+class System (Exception): # nao encotra o sistema
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
+class Tester(object):
+    def __init__(self, test, alternative_tests_root):
+        self.tests_root = os.path.join(Config().orpsoc_root,'orpsoc/test')
+        self.openocd_root = Config().openocd_root
+        self.system_root = Config().systems_root
+	self.first = True
+
+        if alternative_tests_root:
+            if os.path.exists(alternative_tests_root[0]):
+                self.tests_root = alternative_tests_root[0]
             else:
-                print "Path " + test[0] + " not found." #fazer uma exception
-                exit(1)
+                raise Tests_path (alternative_tests_root[0]) #adicionar orpsoc
 
         self.list_tests = [d for d in os.listdir(self.tests_root) if os.path.isdir(os.path.join(self.tests_root, d))]
 
@@ -33,9 +68,7 @@ class Tester(object):
 	        del self.list_tests[0:len(self.list_tests)]
 		self.list_tests.append(test[0])
             else:
-                print "Test " + test[0] + " not found. will run all tests"
-
-
+                raise Test (test[0]) #adicionar orpsoc
 
 
     def build_C(self, test, equip):
@@ -43,6 +76,7 @@ class Tester(object):
         print "Building C " + test + " test for " + equip
         print 'make ' + equip 
         utils.launch('make ' + equip , cwd=os.path.join(self.tests_root, test), shell=True)
+
 
     def run(self,system):
 
@@ -54,18 +88,21 @@ class Tester(object):
 
         args = ['-rf']
         args += ['build/'+self.system]
-        utils.launch('rm',args,cwd ='/home/carlos/projecto/orpsoc-build')
+        #utils.launch('rm',args)
 
         if self.mode == 'board':
             #build verilog
             #self.run_build(self.system) #descomentar isto
 
-            #send .sof
-            cmd = "quartus_pgm --mode=jtag -o p\;build/" + self.system + "/bld-quartus/de0_nano.sof"
-            os.system(cmd) #descomentar
-
+            #send .sof for board
+            cmd = "quartus_pgm --mode=jtag -o p\;build/" + self.system + "/bld-quartus/" + self.system + ".sof"
+            try:
+                os.system(cmd) 
+            except:
+                raise Load_sof (cmd)
 
             #lauch OpenOCD
+            print self.openocd_root
             args = ['./src/openocd']
             args += ['-s']
             args += ['./tcl']
@@ -73,7 +110,10 @@ class Tester(object):
             args += ['./tcl/interface/altera-usb-blaster.cfg']
             args += ['-f']
             args += ['./tcl/board/or1k_generic.cfg']
-            self.process = subprocess.Popen(args,cwd ='/home/carlos/projecto/openocd') # descomentar isto
+            try:
+                self.process = subprocess.Popen(args,cwd = self.openocd_root)
+            except OSError:
+                raise OpenOCD(args)
 
             time.sleep(5)
 
@@ -86,26 +126,29 @@ class Tester(object):
             import Pe_test
             if self.mode == 'verilator':
                 Pe_test.verilator(self,test)
-            if self.mode == 'icarus':
+            elif self.mode == 'icarus':
                 Pe_test.icarus(self,test)
-            if self.mode == 'board':
+            elif self.mode == 'board':
                 Pe_test.board(self,test)
+            else:
+                raise Mode (self.mode)
 
         self.result.close()
         if self.mode == 'board':
             self.process.terminate() 
 
+
     def run_simulator(self, system, sim, elf_file = None ):
         core = CoreManager().get_core(system)
         if core == None:
-            print("Could not find any core named " + system)
-            exit(1)
-        sim = SimulatorFactory(sim, core) #por a except se não encontrar o simulador
+            raise system (system)
+        sim = SimulatorFactory(sim, core) #por a excetpio do simulador
         if  not os.path.exists(sim.sim_root) or self.first:
             sim._write_config_files()
             sim.build()
             self.first = None
         sim.run(elf_file)
+
 
     def run_build(self,system):
         if system in CoreManager().get_systems():
@@ -114,19 +157,18 @@ class Tester(object):
             backend.configure()
             backend.build()
         else:
-            print("Error: Can't find system " + known.system)
+            raise system (system)
 
 
     def configure_verilator(self, system, sim):
         core = CoreManager().get_core(system)
         if core == None:
-            print("Could not find any core named " + system)
-            exit(1)
-        sim = SimulatorFactory(sim, core) #por a except se não encontrar o simulador
+            raise system (system)
+        sim = SimulatorFactory(sim, core)
 	sim.configure()
 
-        cmd = "sed 's/\/\/#define UART_FIFO/#define UART_FIFO/' /home/carlos/projecto/orpsoc-cores/systems/de0_nano_sim/bench/verilator/UartSC.cpp > /home/carlos/projecto/orpsoc-build/build/de0_nano_sim/sim-verilator/bench/verilator/UartSC.cpp"
-        os.system(cmd)
+        cmd = "sed 's/\/\/#define UART_FIFO/#define UART_FIFO/' " + os.path.join(self.system_root, system) + "/bench/verilator/UartSC.cpp > " + os.getcwd() + os.path.join("/build/", system) + "/sim-verilator/bench/verilator/UartSC.cpp"
+        os.system(cmd) #exception se não encontrar um dos ficheiros
 
 
     def clean(self, test):

@@ -4,11 +4,11 @@ def verilator(self,test):
     self.result.write("Test SPI-->")
 
     self.build_C(test,'sim')
-    elf_file = ['-f', os.path.join(self.orpsoc_root, test) + '/elf_file_sim']
+    elf_file = ['-f', os.path.join(self.tests_root, test) + '/elf_file_sim']
 
     #create and open fifos
-    os.mkfifo(os.path.join(self.orpsoc_root,'RX'))
-    RX = os.open (os.path.join(self.orpsoc_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
+    os.mkfifo(os.path.join(self.tests_root,'RX'))
+    RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
 
     self.run_simulator(self.system, 'verilator' , elf_file)
 
@@ -22,7 +22,7 @@ def verilator(self,test):
 
     #close and remove fifos
     os.close(RX)
-    os.remove(os.path.join(self.orpsoc_root,'RX'))
+    os.remove(os.path.join(self.tests_root,'RX'))
 
 
 def icarus(self,test):
@@ -38,10 +38,11 @@ def board(self,test):
     self.result.write("Test SPI -->")
     #build elf_file
     self.build_C(test,'board')
-    elf_file = os.path.join(self.orpsoc_root, test) + '/elf_file_board'
+    elf_file = os.path.join(self.tests_root, test) + '/elf_file_board'
 
     print "open Serial Port(UART)"
-    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1) # ver da excetpiom
+    os.system('sudo chmod a+rwx /dev/ttyUSB0')
+    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1) # ver da excetpiom e por o chmod 
 
     print 'connecting OpenOCD'
     HOST = '127.0.0.1'   #localhost

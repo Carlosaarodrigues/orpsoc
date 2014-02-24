@@ -16,7 +16,7 @@ def verilator(self,test):
     #create and open fifos
     os.mkfifo(os.path.join(self.tests_root,'RX'))
     os.mkfifo(os.path.join(self.tests_root,'TX'))
-    RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
+    RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK) 
     TX = open (os.path.join(self.tests_root,'TX'),'w+',0)
 
     TX.write(word)
@@ -53,7 +53,13 @@ def board(self,test):
     elf_file = os.path.join(self.tests_root, test) + '/elf_file_board'
 
     print "open Serial Port(UART)"
-    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1) # ver da excetpiom
+    try:
+        ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+    except serial.SerialException:
+        print 'change permission of /dev/ttyUSB0'
+        os.system('sudo chmod a+rwx /dev/ttyUSB0') # ver da excetpiome
+        ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+        
 
     print 'connecting OpenOCD'
     HOST = '127.0.0.1'   #localhost
