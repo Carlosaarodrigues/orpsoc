@@ -8,41 +8,62 @@ from orpsoc.simulator import SimulatorFactory
 from orpsoc.build import BackendFactory
 from orpsoc.config import Config
 
-class Tests_path(Exception): # não contra o caminho de testes
+class Tests_path(Exception): # tests path dont found
      def __init__(self, value):
          self.value = value
      def __str__(self):
          return repr(self.value)
 
-class Test(Exception): # não encontra o teste
+class Test(Exception): # test dont found
      def __init__(self, value):
          self.value = value
      def __str__(self):
          return repr(self.value)
 
-class OpenOCD (Exception): # não conetra o openocd
+class OpenOCD (Exception): # problem launch openocd
      def __init__(self, cmd):
          self.cmd = cmd
      def __str__(self):
          return repr(self.cmd)
 
-class Load_sof (Exception): # não concegue carregar o soffile
+class Load_sof (Exception): # problem load sof file
      def __init__(self, cmd):
          self.cmd = cmd
      def __str__(self):
          return repr(self.cmd)
 
-class Mode (Exception): # nao encotnra o mode
+class Mode (Exception): # mode dont found
      def __init__(self, mode):
          self.mode = mode
      def __str__(self):
          return repr(self.mode)
 
-class System (Exception): # nao encotra o sistema
+class System (Exception): # system dont found
      def __init__(self, value):
          self.value = value
      def __str__(self):
          return repr(self.value)
+
+class Connect_OpenOCD(Exception): # Problem connecting with OpenOCD
+     def __init__(self, host,port):
+         self.host = host
+         self.port = port
+     def __str__(self):
+         return repr(self.host, self.port)
+
+class Serial_port (Exception): # Serial pornto dont found
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
+class Configue_Verilator(Exception): # dont configure file of verialtor
+     def __init__(self, uart, new_uart):
+         self.uart = uart
+         self.new_uart = new_uart
+     def __str__(self):
+         return repr(self.uart, self.new_uart)
+
 
 class Tester(object):
     def __init__(self, test, alternative_tests_root):
@@ -51,24 +72,27 @@ class Tester(object):
         self.system_root = Config().systems_root
 	self.first = True
 
+        if not os.path.exists(self.tests_root):
+            raise Tests_path ("default: " + self.tests_root)
+
         if alternative_tests_root:
             if os.path.exists(alternative_tests_root[0]):
                 self.tests_root = alternative_tests_root[0]
             else:
-                raise Tests_path (alternative_tests_root[0]) #adicionar orpsoc
+                raise Tests_path (alternative_tests_root[0])
 
         self.list_tests = [d for d in os.listdir(self.tests_root) if os.path.isdir(os.path.join(self.tests_root, d))]
 
 	if "Rom" in self.list_tests:
-		self.list_tests.remove("Rom")
-		self.list_tests.append("Rom")
+	    self.list_tests.remove("Rom")
+	    self.list_tests.append("Rom")
 
         if test:
             if test[0] in self.list_tests:
 	        del self.list_tests[0:len(self.list_tests)]
 		self.list_tests.append(test[0])
             else:
-                raise Test (test[0]) #adicionar orpsoc
+                raise Test (test[0])
 
 
     def build_C(self, test, equip):
@@ -82,24 +106,25 @@ class Tester(object):
 
         self.system = system.system
         self.mode = system.mode[0]
+	self.sof_file = "build/" + self.system + "/bld-quartus/" + self.system + ".sof"
 
         self.result = open (os.path.join(self.tests_root,'restults'),'w+',0)
         self.result.write("tests with " + self.mode+ '\n')
 
         args = ['-rf']
         args += ['build/'+self.system]
-        #utils.launch('rm',args)
+        utils.launch('rm',args)
 
         if self.mode == 'board':
             #build verilog
-            #self.run_build(self.system) #descomentar isto
+            self.run_build(self.system) #descomentar isto
 
             #send .sof for board
-            cmd = "quartus_pgm --mode=jtag -o p\;build/" + self.system + "/bld-quartus/" + self.system + ".sof"
-            try:
-                os.system(cmd) 
-            except:
-                raise Load_sof (cmd)
+            if not os.path.exists(self.sof_file):
+                raise Load_sof (self.sof_file)
+            cmd = "quartus_pgm --mode=jtag -o p\;" + self.sof_file
+            os.system(cmd) 
+
 
             #lauch OpenOCD
             print self.openocd_root
@@ -142,7 +167,7 @@ class Tester(object):
         core = CoreManager().get_core(system)
         if core == None:
             raise system (system)
-        sim = SimulatorFactory(sim, core) #por a excetpio do simulador
+        sim = SimulatorFactory(sim, core)
         if  not os.path.exists(sim.sim_root) or self.first:
             sim._write_config_files()
             sim.build()
@@ -161,14 +186,19 @@ class Tester(object):
 
 
     def configure_verilator(self, system, sim):
+        self.uart = os.path.join(self.system_root, system) + "/bench/verilator/UartSC.cpp"
+        self.new_uart = os.getcwd() + os.path.join("/build/", system) + "/sim-verilator/bench/verilator/UartSC.cpp"
         core = CoreManager().get_core(system)
         if core == None:
             raise system (system)
         sim = SimulatorFactory(sim, core)
 	sim.configure()
 
-        cmd = "sed 's/\/\/#define UART_FIFO/#define UART_FIFO/' " + os.path.join(self.system_root, system) + "/bench/verilator/UartSC.cpp > " + os.getcwd() + os.path.join("/build/", system) + "/sim-verilator/bench/verilator/UartSC.cpp"
-        os.system(cmd) #exception se não encontrar um dos ficheiros
+        if not os.path.exists(self.uart) or not os.path.exists(self.new_uart):
+            raise Configue_Verilator (self.uart, self.new_uart)
+
+        cmd = "sed 's/\/\/#define UART_FIFO/#define UART_FIFO/' " + self.uart + " > " + self.new_uart
+        os.system(cmd)
 
 
     def clean(self, test):

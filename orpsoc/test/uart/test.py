@@ -3,6 +3,7 @@ import socket
 import serial
 import time
 from orpsoc import utils
+from orpsoc.test import Connect_OpenOCD, Serial_port
 
 def verilator(self,test):
 
@@ -11,7 +12,7 @@ def verilator(self,test):
     self.build_C(test,'sim')
     elf_file = ['-f', os.path.join(self.tests_root, test) + '/elf_file_sim']
 
-    word = "Uart Test\n"
+    self.word = "Uart Test\n"
 
     #create and open fifos
     os.mkfifo(os.path.join(self.tests_root,'RX'))
@@ -19,11 +20,11 @@ def verilator(self,test):
     RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK) 
     TX = open (os.path.join(self.tests_root,'TX'),'w+',0)
 
-    TX.write(word)
+    TX.write(self.word)
     self.run_simulator(self.system, 'verilator' , elf_file)
 
     Result = os.read(RX,11)
-    if Result == word:
+    if Result == self.word:
         print "Test Uart --> PASS"
         self.result.write(" PASS\n")
     else:
@@ -42,10 +43,13 @@ def icarus(self,test):
 
 def board(self,test):
 
-    word = "Uart Test\n"
-
-    print "Board must be connect!!"
-    print "OpenOCD must be build for board"
+    #serial port
+    self.serial_port = '/dev/ttyUSB0'
+    self.baudrate = 115200
+    #connect OpenOCD machine interface
+    self.host = '127.0.0.1'
+    self.port = 6666 
+    self.word = "Uart Test\n"
 
     self.result.write("Test Uart -->")
     #build elf_file
@@ -53,19 +57,23 @@ def board(self,test):
     elf_file = os.path.join(self.tests_root, test) + '/elf_file_board'
 
     print "open Serial Port(UART)"
+    if not os.path.exists(self.serial_port):
+        raise Serial_port (self.serial_port)
+
     try:
-        ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+        ser = serial.Serial(self.serial_port, self.baudrate, timeout=1)
     except serial.SerialException:
-        print 'change permission of /dev/ttyUSB0'
-        os.system('sudo chmod a+rwx /dev/ttyUSB0') # ver da excetpiome
-        ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1)
+        print 'change permission of ' + self.serial_port
+        os.system('sudo chmod a+rwx' + self.serial_port)
+        ser = serial.Serial(self.serial_port , self.baudrate, timeout=1)
         
 
     print 'connecting OpenOCD'
-    HOST = '127.0.0.1'   #localhost
-    PORT = 6666    #OpenOCD port for machine interface
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST,PORT))
+    try:
+        s.connect((self.host,self.port))
+    except socket.error:
+        raise Connect_OpenOCD (self.host,self.port)
 
     print "send elf_file and run program in board"
     #halt processor
@@ -85,12 +93,12 @@ def board(self,test):
     s.recv(1024)
 
     print "send data"
-    ser.write(word)
+    ser.write(self.word)
     print "wait for data"
     time.sleep(1)
     Result = ser.read(size=64)
 
-    if Result == word:
+    if Result == self.word:
         print "Test Uart --> PASS"
         self.result.write(" PASS\n")
     else:

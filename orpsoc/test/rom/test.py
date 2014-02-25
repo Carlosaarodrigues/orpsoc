@@ -1,4 +1,10 @@
 import os
+import socket
+import serial
+import time
+from orpsoc import utils
+from orpsoc.test import Connect_OpenOCD, Serial_port
+
 def verilator(self,test):
 
     self.result.write("Test ROM-->")
@@ -33,10 +39,12 @@ def icarus(self,test):
 
 def board(self,test):
 
-    word = "Uart Test\n"
-
-    print "Board must be connect!!"
-    print "OpenOCD must be build for board"
+    #serial port
+    self.serial_port = '/dev/ttyUSB0'
+    self.baudrate = 115200
+    #connect OpenOCD machine interface
+    self.host = '127.0.0.1'
+    self.port = 6666 
 
     self.result.write("Test ROM -->")
     #build elf_file
@@ -44,14 +52,23 @@ def board(self,test):
     elf_file = os.path.join(self.tests_root, test) + '/elf_file_board'
 
     print "open Serial Port(UART)"
-    os.system('sudo chmod a+rwx /dev/ttyUSB0')
-    ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=1) # ver da excetpiom e por o chmod 
+    if not os.path.exists(self.serial_port):
+        raise Serial_port (self.serial_port)
+
+    try:
+        ser = serial.Serial(self.serial_port, self.baudrate, timeout=1)
+    except serial.SerialException:
+        print 'change permission of ' + self.serial_port
+        os.system('sudo chmod a+rwx' + self.serial_port)
+        ser = serial.Serial(self.serial_port , self.baudrate, timeout=1)
+        
 
     print 'connecting OpenOCD'
-    HOST = '127.0.0.1'   #localhost
-    PORT = 6666    #OpenOCD port for machine interface
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST,PORT))
+    try:
+        s.connect((self.host,self.port))
+    except socket.error:
+        raise Connect_OpenOCD (self.host,self.port)
 
     print "send elf_file and run program in board"
     #halt processor

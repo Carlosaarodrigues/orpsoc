@@ -17,7 +17,7 @@ from orpsoc.coremanager import CoreManager, DependencyError
 from orpsoc.simulator import SimulatorFactory
 from orpsoc.system import System
 from orpsoc.core import Core
-from orpsoc.test import Tester
+from orpsoc.test import Tester, Tests_path, Test, OpenOCD, Load_sof, Mode, System, Connect_OpenOCD, Serial_port, Configue_Verilator
 import logging
 
 logging.basicConfig(filename='orpsoc.log', filemode='w', level=logging.DEBUG)
@@ -139,10 +139,41 @@ def sim(known, remaining):
     logger.debug('sim() -Done-')
 
 def test(known, remaining):
-    tes = Tester(known.test, known.folder)
-#p roaqui um try com exce do sim
-    tes.run(known)
+    try:
+        tes = Tester(known.test, known.folder)
+    except Tests_path as e:
+        print "Tests path " + e.value + " dont foud"
+        exit (1)
+    except Test as e:
+        print "Test " + e.value + " dont foud"
+        exit (1) 
 
+    try:
+        tes.run(known)
+    except OpenOCD as e:
+        print "problem launch OpenOCD " + str(e.cmd)
+        exit (1)
+    except Load_sof as e:
+        print "problem load sof file " + e.cmd
+        exit (1)
+    except Mode as e:
+        print "Mode " + e.mode + " dont foud"
+        exit (1) 
+    except System as e:
+        print "System " + e.value + " dont foud"
+        exit (1)
+    except Connect_OpenOCD as e:
+        print "Problem connecting with OpenOCD IP-> " + e.host + " port-> " + str(e.port)
+        exit (1)
+    except Serial_port as e:
+        print "Serial port " + e.value + " dont foud"
+        exit (1)
+    except Configue_Verilator as e:
+        print "dont find configure file of verilator " + e.uart + " or " + e.new_uart 
+        exit (1)
+    except DependencyError as e:
+        print("Error: '" + known.system + "' or any of its dependencies requires '" + e.value + "', but this core was not found")
+        exit(1)
 
 def run(known, remaining):
     try:
