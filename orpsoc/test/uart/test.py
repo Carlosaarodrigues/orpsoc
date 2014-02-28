@@ -64,7 +64,7 @@ def board(self,test):
         ser = serial.Serial(self.serial_port, self.baudrate, timeout=1)
     except serial.SerialException:
         print 'change permission of ' + self.serial_port
-        os.system('sudo chmod a+rwx' + self.serial_port)
+        os.system('sudo chmod a+rwx ' + self.serial_port)
         ser = serial.Serial(self.serial_port , self.baudrate, timeout=1)
         
 

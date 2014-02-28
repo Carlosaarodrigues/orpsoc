@@ -113,11 +113,11 @@ class Tester(object):
 
         args = ['-rf']
         args += ['build/'+self.system]
-        utils.launch('rm',args)
+        #utils.launch('rm',args)
 
         if self.mode == 'board':
             #build verilog
-            self.run_build(self.system) #descomentar isto
+            #self.run_build(self.system) #descomentar isto
 
             #send .sof for board
             if not os.path.exists(self.sof_file):
