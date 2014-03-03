@@ -15,6 +15,7 @@ from orpsoc.build import BackendFactory
 from orpsoc.config import Config
 from orpsoc.coremanager import CoreManager, DependencyError
 from orpsoc.simulator import SimulatorFactory
+from orpsoc.simulator.verilator import Source
 from orpsoc.system import System
 from orpsoc.core import Core
 from orpsoc.test import Tester, Tests_path, Test, OpenOCD, Load_sof, Mode, System, Connect_OpenOCD, Serial_port, Configue_Verilator

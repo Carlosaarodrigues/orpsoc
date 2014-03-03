@@ -9,8 +9,8 @@ endif
 OR1K_TOOL_PREFIX = or1k-elf-
 OR1K_CC = $(OR1K_TOOL_PREFIX)gcc
 OR1K_CFLAGS = -c
-FLAGS_SIM = -mboard=or1ksim-uart 
-FLAGS_BOARD = -mboard=de0_nano
+FLAGS_SIM = -mboard=or1ksim-uart -DSIMULATOR
+FLAGS_BOARD = -mboard=de0_nano -DBOARD
 
 SOURCES = spi.c
 OBJECTS = $(SOURCES:.cpp=.o)

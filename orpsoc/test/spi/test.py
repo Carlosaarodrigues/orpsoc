@@ -84,16 +84,10 @@ def board(self,test):
     s.send('resume\x1a')
     s.recv(1024)
 
-    print "wait for data"
-    time.sleep(1)
-    Result = ser.read(size=64)
-
-    if Result == "SPI OK\n":
-        print "Test SPI --> PASS"
-        self.result.write(" PASS\n")
-    else:
-        print "Test SPI --> FAIL"
-        self.result.write(" FAIL\n")
+    while 50:
+        time.sleep(1)
+        Result = ser.read(size=64)
+        print Result
 
     ser.close()
 
