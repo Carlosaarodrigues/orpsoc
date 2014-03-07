@@ -15,8 +15,16 @@ def verilator(self,test):
     self.word = "Uart Test\n"
 
     #create and open fifos
-    os.mkfifo(os.path.join(self.tests_root,'RX'))
-    os.mkfifo(os.path.join(self.tests_root,'TX'))
+    try:
+        os.mkfifo(os.path.join(self.tests_root,'RX'))
+    except OSError:
+        os.remove(os.path.join(self.tests_root,'RX'))
+        os.mkfifo(os.path.join(self.tests_root,'RX'))
+    try:
+        os.mkfifo(os.path.join(self.tests_root,'TX'))
+    except OSError:
+        os.remove(os.path.join(self.tests_root,'TX'))
+        os.mkfifo(os.path.join(self.tests_root,'TX'))
     RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK) 
     TX = open (os.path.join(self.tests_root,'TX'),'w+',0)
 

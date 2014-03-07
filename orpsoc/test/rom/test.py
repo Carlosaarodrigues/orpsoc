@@ -14,7 +14,11 @@ def verilator(self,test):
     elf_file = ['-f', os.path.join(self.tests_root, test) + '/elf_file_sim']
 
     #create and open fifos
-    os.mkfifo(os.path.join(self.tests_root,'RX'))
+    try:
+        os.mkfifo(os.path.join(self.tests_root,'RX'))
+    except OSError:
+        os.remove(os.path.join(self.tests_root,'RX'))
+        os.mkfifo(os.path.join(self.tests_root,'RX'))
     RX = os.open (os.path.join(self.tests_root,'RX'),os.O_RDONLY | os.O_NONBLOCK)
 
     #force Build

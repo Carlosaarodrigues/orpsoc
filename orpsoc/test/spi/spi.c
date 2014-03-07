@@ -83,32 +83,16 @@ int main()
     *(spi_slave) = 0x00; 
 
     if(recv == send){
-        printf("SPI OK  %d  %d\n", recv ,send);
+        printf("SPI OK\n");
     }else{
-        printf("SPI NO  %d  %d\n", recv ,send);
+        printf("SPI NO\n");
     }
 
 
 #endif
 
 #ifdef BOARD
-	char data;
-
-	int X;
-	int Y;
-	int Z;
-
-	*(spi_base) = 0xFF;
-	*(spi_base2) = 0xFF; 
-
-	//X0
-	*(spi_slave) = 0x01; //select slave
-  	*(spi_write) = X0;
-	data = *(spi_read);
-	*(spi_slave) = 0x00; //select slave
-
-
-
+        printf("SPI OK\n");
 
 #endif
 
