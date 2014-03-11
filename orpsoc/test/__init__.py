@@ -113,7 +113,7 @@ class Tester(object):
 
         args = ['-rf']
         args += ['build/'+self.system]
-        #utils.launch('rm',args)
+        #utils.launch('rm',args)#descomentar isto
 
         if self.mode == 'board':
             #build verilog
@@ -122,8 +122,10 @@ class Tester(object):
             #send .sof for board
             if not os.path.exists(self.sof_file):
                 raise Load_sof (self.sof_file)
-            cmd = "quartus_pgm --mode=jtag -o p\;" + self.sof_file
-            os.system(cmd) 
+            args = ['--mode=jtag']
+            args += ['-o']
+            args += ['p;' + self.sof_file]
+            utils.Launcher('quartus_pgm', args).run()
 
 
             #lauch OpenOCD
