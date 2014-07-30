@@ -3,12 +3,12 @@
 #include <stdio.h>
 
 
-char* spi_base = (char*)  0xb0000000; // config Control Register
-char* spi_base2 = (char*)  0xb0000003; // config Extension Register
-char* spi_write = (char*) 0xb0000002; //write byte
-char* spi_read = (char*) 0xb0000002; //read byte
-char* spi_slave = (char*)  0xb0000004; //select slave
-char* spi_state = (char*)  0xb0000001; //state
+char* spi_base = (char*)  0xb1000000; // config Control Register
+char* spi_base2 = (char*)  0xb1000003; // config Extension Register
+char* spi_write = (char*) 0xb1000002; //write byte
+char* spi_read = (char*) 0xb1000002; //read byte
+char* spi_slave = (char*)  0xb1000004; //select slave
+char* spi_state = (char*)  0xb1000001; //state
 
 unsigned char read = 0x03;
 unsigned char enable_write = 0x06;
@@ -88,11 +88,44 @@ int main()
         printf("SPI NO\n");
     }
 
+    *(spi_slave) = 0x00;
 
 #endif
 
 #ifdef BOARD
-        printf("SPI OK\n");
+
+    *(spi_base) = 0xFF;
+    *(spi_base2) = 0xFF; 
+
+    *(spi_slave) = 0x01; //select slave
+
+    *(spi_write) = 0x00; //line 0
+    data=*(spi_read);
+    printf ("data1->%d\n",data);
+    *(spi_state) = 0x02;
+    do{
+
+    }while(!spi_state[0]);
+
+    data = *(spi_read);
+    printf ("data2->%d\n",data);
+
+  //  *(spi_slave) = 0x00;
+
+  //  *(spi_slave) = 0x01; //select slave
+
+    *(spi_write) = 0xFF; // line 1
+    data=*(spi_read);
+    printf ("data1.2->%d\n",data);
+    *(spi_state) = 0x02;
+    do{
+
+    }while(!spi_state[0]);
+
+    data = *(spi_read);
+    printf ("data2.2->%d\n",data);
+
+    *(spi_slave) = 0x00;
 
 #endif
 

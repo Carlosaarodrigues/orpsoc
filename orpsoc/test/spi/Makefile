@@ -1,5 +1,6 @@
 # Set V=1 when calling make to enable verbose output
 # mainly for debugging purposes.
+V=1
 ifeq ($(V), 1)
 Q=
 else
